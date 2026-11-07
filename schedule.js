@@ -9,6 +9,7 @@ function wd(s){return parse(s).getDay();}
 function hm(s){var a=String(s||"0:0").split(":").map(Number);return(a[0]||0)*60+(a[1]||0);}
 function toHM(m){m=((m%DAYM)+DAYM)%DAYM;return pad(Math.floor(m/60))+":"+pad(m%60);}
 function lab(m){m=((Math.round(m)%DAYM)+DAYM)%DAYM;var h=Math.floor(m/60);return((h+11)%12+1)+":"+pad(m%60)+" "+(h>=12?"PM":"AM");}
+function short(m){m=((Math.round(m)%DAYM)+DAYM)%DAYM;var h=Math.floor(m/60);return((h+11)%12+1)+':'+pad(m%60);}
 function hlab(h){h=h%24;return((h+11)%12+1)+" "+(h>=12?"PM":"AM");}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function esc(t){return String(t==null?"":t).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
@@ -46,8 +47,11 @@ function view(sc,today){START=Math.max(0,Math.floor(hm(sc.life.wake)/60)*60);var
  var blocks=segs.map(function(s){var e=s.ev,g=6,w="calc((100% - "+(s.cols+1)*g+"px) / "+s.cols+")",l="calc("+g+"px + "+s.col+" * ((100% - "+(s.cols+1)*g+"px) / "+s.cols+" + "+g+"px))";
   var ht=Math.max(30,(s.end-s.start)/60*HH-3),done=(e.completedDates||[]).indexOf(d)>=0,c=tone(e.tone),dark=e.tone==="ink"||e.tone==="graphite";
   var endL=s.over&&!s.spill?lab((e.start+e.duration)%DAYM)+" next day":lab(s.spill?s.end:e.start+e.duration);
-  return'<div class="sc-ev'+(done?" sc-done":"")+(dark?" sc-dark":"")+'" data-ev="'+e.id+'" style="top:'+y(s.start)+'px;height:'+ht+'px;left:'+l+';width:'+w+';background:'+c+'">'+
-  '<div class="sc-evt"><div class="sc-tt">'+esc(e.title)+'</div><div class="sc-tm">'+(s.spill?"From last night · ":"")+lab(s.spill?e.start:s.start)+' – '+endL+(e.recur&&e.recur!=="none"?" · repeats":"")+'</div></div>'+
+  var vis=s.end-s.start,compact=vis<45||ht<52||(s.cols>2&&vis<60),rng=lab(s.spill?e.start:s.start)+' – '+endL,tl=esc(e.title)+", "+rng+(done?", done":"");
+  if(compact)return'<div class="sc-ev sc-compact'+(done?" sc-done":"")+(dark?" sc-dark":"")+'" data-ev="'+e.id+'" role="button" tabindex="0" aria-label="'+tl+'. Open details" style="top:'+y(s.start)+'px;height:'+ht+'px;left:'+l+';width:'+w+';background:'+c+'">'+
+  '<div class="sc-one"><b>'+(done?"✓ ":"")+esc(e.title)+'</b><span>&nbsp;·&nbsp;'+short(s.spill?e.start:s.start)+'–'+short(s.spill?(e.start+e.duration)%DAYM:e.start+e.duration)+'</span></div><span class="sc-more" aria-hidden="true">⌃</span></div>';
+  return'<div class="sc-ev'+(done?" sc-done":"")+(dark?" sc-dark":"")+'" data-ev="'+e.id+'" role="button" tabindex="0" aria-label="'+tl+'. Open details" style="top:'+y(s.start)+'px;height:'+ht+'px;left:'+l+';width:'+w+';background:'+c+'">'+
+  '<div class="sc-evt"><div class="sc-tt">'+esc(e.title)+'</div><div class="sc-tm">'+(s.spill?"From last night · ":"")+rng+(e.recur&&e.recur!=="none"?" · repeats":"")+'</div></div>'+
   (s.spill?"":'<button class="sc-chk" data-chk="'+e.id+'" aria-label="'+(done?"Mark not done":"Mark done")+'">'+(done?"✓":"")+'</button>')+'</div>';}).join("");
  var dows=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],strip=week(d).map(function(x){var p=parse(x);return'<button class="sc-day'+(x===d?" on":"")+(x===today?" today":"")+'" data-sday="'+x+'"><span>'+dows[p.getDay()]+'</span><b>'+p.getDate()+'</b>'+(segments(sc,x).length?'<i></i>':'')+'</button>';}).join("");
  var nm=nowMin(),nl=d===today&&nm>=START?'<div class="sc-now" id="sc-now" style="top:'+y(nm)+'px"></div>':"";
@@ -65,5 +69,11 @@ function editor(sc,e,d){var n=!e.id,r=e.recur||"none";
  '<label>Tone</label><div class="sc-tones">'+TONES.map(function(t){return'<button type="button" data-tone="'+t[0]+'" aria-label="'+t[0]+'" aria-pressed="'+((e.tone||"graphite")===t[0])+'" style="background:'+t[1]+'"></button>';}).join("")+'</div>'+
  '<label for="se-n">Notes</label><textarea id="se-n" maxlength="500">'+esc(e.notes||"")+'</textarea>'+
  '<div class="row"><button class="primary" id="se-save">Save</button><button data-close>Cancel</button>'+(n?"":(e.recur&&e.recur!=="none"?'<button id="se-skip">Skip this day</button>':"")+'<button class="danger" id="se-del">Delete</button>')+'</div></div>';}
-window.MMSchedule={blank:blank,lifeEvents:lifeEvents,defaultLife:defaultLife,segments:segments,view:view,editor:editor,hm:hm,iso:iso,add:add,uid:uid,START:function(){return START;},HH:HH};
+function detail(sc,e,d){var done=(e.completedDates||[]).indexOf(d)>=0,rep=e.recur&&e.recur!=="none",end=e.start+e.duration;
+ return'<div class="sc-back" data-close></div><div class="sc-sheet" id="sd" role="dialog" aria-modal="true" aria-labelledby="sd-title"><div class="sc-grab" aria-hidden="true"></div>'+
+ '<div class="sd-top"><h2 id="sd-title">'+esc(e.title)+'</h2><button id="sd-close" data-close aria-label="Close">✕</button></div>'+
+ '<p class="sd-time">'+lab(e.start)+' – '+lab(end)+(end>DAYM?' (next day)':'')+' · '+Math.round(e.duration)+' min</p><p class="muted">'+RECUR[e.recur||"none"]+'</p>'+
+ (e.notes?'<p class="sd-notes">'+esc(e.notes)+'</p>':'')+
+ '<div class="row"><button id="sd-done" aria-pressed="'+done+'" class="'+(done?"primary":"")+'">'+(done?"✓ Done":"Mark done")+'</button><button id="sd-edit">Edit</button>'+(rep?'<button id="sd-skip">Skip this day</button>':'')+'<button class="danger" id="sd-del">Delete</button></div></div>';}
+window.MMSchedule={detail:detail,blank:blank,lifeEvents:lifeEvents,defaultLife:defaultLife,segments:segments,view:view,editor:editor,hm:hm,iso:iso,add:add,uid:uid,START:function(){return START;},HH:HH};
 })();

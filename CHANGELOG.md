@@ -1,5 +1,11 @@
 # Changelog — MojoSoMint app (PWA)
 
+## v1.3 — 2026-11-07
+- Short schedule blocks (under ~45 min, or too short for their text) use a compact one-line layout "Title · 9:00–9:20" with ellipsis and an expand hint; the time always stays visible.
+- Tapping any block opens a details sheet: full title, time range and length, repeat setting, notes, done toggle, Edit, Skip this day (repeating blocks), Delete. Closes with ✕, backdrop tap, swipe down or Esc; dialog semantics, focus moves in and back, blocks reachable by keyboard (Enter/Space).
+- Edit now opens from the sheet; the existing editor (incl. its Skip/Delete) is unchanged. Large blocks keep their quick ✓ button.
+- Service worker cache: **mm-v4**. About: Version 0.4.
+
 ## v1.2 — 2026-11-07
 - Talk-to-text: mic button (44px) beside every text field — Today commitment and reflection, goals, journal, schedule block title and notes. Uses the Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`) with live interim text appended to the field; tap again to stop. Clear listening/stopped states.
 - Graceful errors: microphone permission denied, no speech, other errors; when recognition is unavailable (e.g. some iOS home-screen installs) the field is focused with a hint to use the keyboard's dictation mic.
