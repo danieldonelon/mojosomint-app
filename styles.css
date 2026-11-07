@@ -43,3 +43,9 @@ ul.list{list-style:none;padding:0}ul.list li{display:flex;justify-content:space-
 .sc-sheet h2{margin-top:4px}.sc-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sc-tones{display:flex;gap:10px}.sc-tones button{border-radius:50%;border:2px solid #ddd;padding:0}.sc-tones button[aria-pressed=true]{outline:3px solid #111;outline-offset:2px}
 details.card summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+.mic-wrap{display:flex;gap:8px;align-items:center}.mic-wrap.mic-ta{align-items:flex-start}.mic-wrap>input,.mic-wrap>textarea{flex:1;min-width:0}
+button.mic{flex:none;width:44px;height:44px;padding:0;border-color:#bbb}
+button.mic.listening{background:#111;color:#fff;border-color:#111;animation:micp 1.4s ease-in-out infinite}
+@keyframes micp{0%,100%{box-shadow:0 0 0 0 rgba(17,17,17,.35)}50%{box-shadow:0 0 0 7px rgba(17,17,17,0)}}
+@media(prefers-reduced-motion:reduce){button.mic.listening{animation:none}}
+.mic-hint{margin:6px 0 0;min-height:0}.mic-hint:empty{display:none}
